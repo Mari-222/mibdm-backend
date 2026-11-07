@@ -1,42 +1,7 @@
 # MiBDM – BackEnd (Entrega #2, Bases de Datos I)
 
-API REST en **Spring Boot 3 + Spring JDBC (`JdbcTemplate`)** sobre la base de datos de música **MiBDM** (MySQL 8).
-Código organizado con el patrón **Repositorio**:
+Grupo 6: Mariana González, Kevin Quiroz y Joselyn Nuñez.
 
-```
-controller  → recibe HTTP y devuelve JSON
-service     → reglas de negocio y validaciones
-repository  → SQL con JdbcTemplate (interfaz + implementación)
-model       → records usados como entrada y salida (DTO)
-exception   → errores con código HTTP y manejador global
-```
-
-Grupo 2: Mariana González, Kevin Quiroz y Joselyn Nuñez.
-
-## Cómo ejecutarlo
-
-Requisitos: Java 17+, Maven (o IntelliJ), Docker Desktop.
-
-```bash
-# 1. Levantar MySQL con las tablas y los datos (puerto 3307)
-docker compose up -d
-
-# 2. Ejecutar la API (http://localhost:8080)
-mvn spring-boot:run
-```
-
-* Scripts: `db/01_creacion_base.sql` (tablas, restricciones y vista) y `db/02_insertar_datos.sql` (datos de prueba).
-  Docker los ejecuta solo la primera vez. Para reiniciar la base desde cero: `docker compose down -v && docker compose up -d`.
-* Conexión por defecto (`application.properties`): `localhost:3307`, usuario `root`, contraseña `root1234`.
-  Se puede cambiar con las variables de entorno `DB_URL`, `DB_USER` y `DB_PASSWORD`.
-
-## Convenciones
-
-* Base: `http://localhost:8080/api`. Todo se envía y recibe en JSON.
-* Los errores tienen la forma `{ "error": "mensaje" }` con el código HTTP correspondiente:
-  `400` datos inválidos, `403` operación no permitida, `404` no existe, `409` conflicto (duplicado o restricción).
-* No hay contraseñas: el usuario se identifica por su correo (`/auth/login`) y el FrontEnd guarda su `idUsuario`.
-  Los endpoints de un usuario llevan su id en la ruta (`/usuarios/{idUsuario}/...`).
 
 ## Endpoints
 
@@ -97,18 +62,6 @@ mvn spring-boot:run
 |---|---|---|
 | GET | `/usuarios/{idUsuario}/estadisticas` | Total de escuchas y de segundos, top 5 de canciones, artistas y géneros, y escuchas por plataforma. |
 
-### Ejemplos
-
-```bash
-curl -X POST http://localhost:8080/api/auth/login -H "Content-Type: application/json" \
-     -d '{"correo":"mari.gonzalez@gmail.com"}'
-
-curl -X POST http://localhost:8080/api/usuarios/1/escuchas -H "Content-Type: application/json" \
-     -d '{"idCancion":2,"idPlataforma":1}'
-
-curl -X PUT http://localhost:8080/api/usuarios/1/calificaciones/canciones/2 -H "Content-Type: application/json" \
-     -d '{"puntuacion":5,"comentario":"Imprescindible"}'
-```
 
 ## Tablas usadas por cada funcionalidad
 
