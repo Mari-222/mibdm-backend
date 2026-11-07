@@ -1,0 +1,18 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mibdm-mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      TZ: America/Costa_Rica
+    ports:
+      - "3307:3306"   # 3307 en tu maquina -> 3306 dentro del contenedor (evita choques con un MySQL local)
+    volumes:
+      - mibdm_data:/var/lib/mysql
+      # Los .sql de esta carpeta se ejecutan en orden alfabetico SOLO la primera vez (volumen vacio)
+      - ./db:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  mibdm_data:
