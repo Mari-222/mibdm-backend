@@ -12,6 +12,8 @@ public interface EstadisticaRepository {
 
     List<ItemConteo> topCanciones(int idUsuario, int limite);
 
+    List<ItemConteo> topAlbumes(int idUsuario, int limite);
+
     List<ItemConteo> topArtistas(int idUsuario, int limite);
 
     List<ItemConteo> topGeneros(int idUsuario, int limite);

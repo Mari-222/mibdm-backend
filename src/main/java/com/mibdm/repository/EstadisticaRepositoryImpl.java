@@ -47,6 +47,28 @@ public class EstadisticaRepositoryImpl implements EstadisticaRepository {
     }
 
     @Override
+    public List<ItemConteo> topAlbumes(int idUsuario, int limite) {
+        // Escuchas del album completo (escucha.id_album) + escuchas de sus canciones sueltas
+        return jdbc.query("""
+                SELECT al.titulo AS nombre, COUNT(*) AS total
+                FROM (
+                    SELECT e.id_album
+                    FROM escucha e
+                    WHERE e.id_usuario = ? AND e.id_album IS NOT NULL
+                    UNION ALL
+                    SELECT c.id_album
+                    FROM escucha e
+                    JOIN cancion c ON c.id_cancion = e.id_cancion
+                    WHERE e.id_usuario = ? AND c.id_album IS NOT NULL
+                ) t
+                JOIN album al ON al.id_album = t.id_album
+                GROUP BY al.id_album, al.titulo
+                ORDER BY total DESC, al.titulo
+                LIMIT ?
+                """, MAPPER, idUsuario, idUsuario, limite);
+    }
+
+    @Override
     public List<ItemConteo> topArtistas(int idUsuario, int limite) {
         // Escuchas de canciones (interpretes) + escuchas de albumes (artista del album)
         return jdbc.query("""

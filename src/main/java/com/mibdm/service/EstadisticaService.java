@@ -25,6 +25,7 @@ public class EstadisticaService {
                 estadisticaRepository.totalSegundos(idUsuario),
                 estadisticaRepository.topCanciones(idUsuario, TOP),
                 estadisticaRepository.topArtistas(idUsuario, TOP),
+                estadisticaRepository.topAlbumes(idUsuario, TOP),
                 estadisticaRepository.topGeneros(idUsuario, TOP),
                 estadisticaRepository.porPlataforma(idUsuario));
     }

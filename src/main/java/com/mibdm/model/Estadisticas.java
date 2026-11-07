@@ -7,6 +7,7 @@ public record Estadisticas(
         long totalSegundos,
         List<ItemConteo> topCanciones,
         List<ItemConteo> topArtistas,
+        List<ItemConteo> topAlbumes,
         List<ItemConteo> topGeneros,
         List<ItemConteo> porPlataforma) {
 
