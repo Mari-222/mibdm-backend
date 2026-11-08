@@ -1,6 +1,6 @@
 -- Mi base de datos de música
 -- Kevin Quiroz, Joselyn Nuñez y Mariana González 
-
+SET NAMES utf8mb4;
 USE MiBDM;
 
 -- usuario
