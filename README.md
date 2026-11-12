@@ -25,8 +25,8 @@ Grupo 6: Mariana González, Kevin Quiroz y Joselyn Nuñez.
 | GET | `/canciones/{idCancion}` | Canción, participantes con su rol, géneros y promedio de calificaciones. |
 | GET | `/generos` | Lista de géneros. |
 | GET | `/plataformas` | Lista de plataformas. |
-| POST | `/albumes` | **Solo usuarios tipo `artista`** (403 si no). Cuerpo `{"idUsuario","titulo","anioLanzamiento","tipo","idArtista"}`; `tipo` es `LP`, `EP`, `sencillo` o `recopilatorio` (por defecto `LP`). |
-| POST | `/canciones` | **Solo usuarios tipo `artista`**. Cuerpo `{"idUsuario","titulo","duracionSeg","numeroPista","idAlbum","idsInterpretes":[..],"idsGeneros":[..]}`. `numeroPista` e `idAlbum` son opcionales (sencillo). Se inserta en `cancion`, `cancion_artista` y `cancion_genero` en una transacción. 409 si la pista ya existe en el álbum. |
+| POST | `/albumes` | **Solo usuarios tipo `artista`** (403 si no). Cuerpo `{"idUsuario","titulo","anioLanzamiento","tipo"}`; `tipo` es `LP`, `EP`, `sencillo` o `recopilatorio` (por defecto `LP`). El álbum queda siempre a nombre del perfil de artista del usuario (`usuario.idArtista`). |
+| POST | `/canciones` | **Solo usuarios tipo `artista`**. Cuerpo `{"idUsuario","titulo","duracionSeg","numeroPista","idAlbum","idsInterpretes":[..],"idsGeneros":[..]}`. `numeroPista` e `idAlbum` son opcionales (sencillo); si hay `idAlbum`, debe ser un álbum del propio artista (403 si no). El artista del usuario queda como autor (roles `compositor` e `interprete`); `idsInterpretes` solo agrega a **otros** artistas como intérpretes y puede ir vacío. Se inserta en `cancion`, `cancion_artista` y `cancion_genero` en una transacción. 409 si la pista ya existe en el álbum. |
 
 ### Escuchas (`escucha`)
 

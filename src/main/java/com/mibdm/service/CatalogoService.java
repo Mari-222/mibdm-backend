@@ -1,5 +1,6 @@
 package com.mibdm.service;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -100,11 +101,12 @@ public class CatalogoService {
 
     // ---------- alta de catalogo (solo usuarios tipo 'artista') ----------
 
+    /** El album queda siempre a nombre del perfil de artista del usuario que lo publica. */
     public Album crearAlbum(AlbumCrear datos) {
         if (datos == null || datos.titulo() == null || datos.titulo().isBlank()) {
             throw ApiException.badRequest("El titulo es obligatorio");
         }
-        exigirArtista(datos.idUsuario());
+        Usuario autor = exigirArtista(datos.idUsuario());
         String tipo = datos.tipo() == null || datos.tipo().isBlank() ? "LP" : datos.tipo();
         if (!TIPOS_ALBUM.contains(tipo)) {
             throw ApiException.badRequest("Tipo de album invalido. Use: LP, EP, sencillo o recopilatorio");
@@ -112,21 +114,23 @@ public class CatalogoService {
         if (datos.anioLanzamiento() < 1900 || datos.anioLanzamiento() > 2100) {
             throw ApiException.badRequest("El anio de lanzamiento debe estar entre 1900 y 2100");
         }
-        if (!artistaRepository.existe(datos.idArtista())) {
-            throw ApiException.notFound("No existe el artista " + datos.idArtista());
-        }
-        int id = albumRepository.crear(new AlbumCrear(
-                datos.idUsuario(), datos.titulo().trim(), datos.anioLanzamiento(), tipo, datos.idArtista()));
+        int id = albumRepository.crear(autor.idArtista(), new AlbumCrear(
+                datos.idUsuario(), datos.titulo().trim(), datos.anioLanzamiento(), tipo));
         return albumRepository.buscarPorId(id).orElseThrow();
     }
 
-    /** Inserta la cancion, sus interpretes y sus generos en una sola transaccion. */
+    /**
+     * Inserta la cancion, sus participantes y sus generos en una sola transaccion.
+     * El artista del usuario es siempre el autor (compositor e interprete); idsInterpretes
+     * solo agrega a otros artistas como interpretes.
+     */
     @Transactional
     public CancionDetalle crearCancion(CancionCrear datos) {
         if (datos == null || datos.titulo() == null || datos.titulo().isBlank()) {
             throw ApiException.badRequest("El titulo es obligatorio");
         }
-        exigirArtista(datos.idUsuario());
+        Usuario autor = exigirArtista(datos.idUsuario());
+        int idAutor = autor.idArtista();
         if (datos.duracionSeg() <= 0) {
             throw ApiException.badRequest("La duracion debe ser mayor que 0");
         }
@@ -136,13 +140,20 @@ public class CatalogoService {
         if (datos.numeroPista() != null && datos.idAlbum() == null) {
             throw ApiException.badRequest("Una cancion sin album no puede tener numero de pista");
         }
-        if (datos.idAlbum() != null && !albumRepository.existe(datos.idAlbum())) {
-            throw ApiException.notFound("No existe el album " + datos.idAlbum());
+        if (datos.idAlbum() != null) {
+            Album album = albumRepository.buscarPorId(datos.idAlbum())
+                    .orElseThrow(() -> ApiException.notFound("No existe el album " + datos.idAlbum()));
+            if (album.idArtista() != idAutor) {
+                throw ApiException.forbidden("Solo puede agregar canciones a sus propios albumes");
+            }
         }
-        if (datos.idsInterpretes() == null || datos.idsInterpretes().isEmpty()) {
-            throw ApiException.badRequest("Debe indicar al menos un interprete");
+        // otros interpretes (opcional); el autor no se repite aunque venga en la lista
+        Set<Integer> otrosInterpretes = new LinkedHashSet<>();
+        if (datos.idsInterpretes() != null) {
+            otrosInterpretes.addAll(datos.idsInterpretes());
         }
-        for (int idArtista : datos.idsInterpretes()) {
+        otrosInterpretes.remove(idAutor);
+        for (int idArtista : otrosInterpretes) {
             if (!artistaRepository.existe(idArtista)) {
                 throw ApiException.notFound("No existe el artista " + idArtista);
             }
@@ -156,7 +167,9 @@ public class CatalogoService {
 
         int idCancion = cancionRepository.crear(
                 datos.titulo().trim(), datos.duracionSeg(), datos.numeroPista(), datos.idAlbum());
-        for (int idArtista : datos.idsInterpretes()) {
+        cancionRepository.agregarArtista(idCancion, idAutor, "compositor");
+        cancionRepository.agregarArtista(idCancion, idAutor, "interprete");
+        for (int idArtista : otrosInterpretes) {
             cancionRepository.agregarArtista(idCancion, idArtista, "interprete");
         }
         for (int idGenero : generos) {
@@ -165,10 +178,12 @@ public class CatalogoService {
         return detalleCancion(idCancion);
     }
 
-    private void exigirArtista(int idUsuario) {
+    /** Devuelve el usuario si es de tipo artista y tiene su perfil de artista; si no, lanza 403. */
+    private Usuario exigirArtista(int idUsuario) {
         Usuario u = usuarioService.exigir(idUsuario);
-        if (!"artista".equals(u.tipo())) {
+        if (!"artista".equals(u.tipo()) || u.idArtista() == null) {
             throw ApiException.forbidden("Solo los usuarios de tipo artista pueden registrar catalogo");
         }
+        return u;
     }
 }

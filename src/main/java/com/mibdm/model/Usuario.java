@@ -2,6 +2,7 @@ package com.mibdm.model;
 
 import java.time.LocalDate;
 
+/** idArtista es el perfil de artista del usuario tipo 'artista'; es null para los usuarios normales. */
 public record Usuario(
         int idUsuario,
         String nombre,
@@ -9,5 +10,6 @@ public record Usuario(
         String correo,
         String pais,
         LocalDate fechaRegistro,
-        String tipo) {
+        String tipo,
+        Integer idArtista) {
 }

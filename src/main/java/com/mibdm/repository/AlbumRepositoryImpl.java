@@ -63,7 +63,7 @@ public class AlbumRepositoryImpl implements AlbumRepository {
     }
 
     @Override
-    public int crear(AlbumCrear a) {
+    public int crear(int idArtista, AlbumCrear a) {
         String sql = "INSERT INTO album (titulo, anio_lanzamiento, tipo, id_artista) VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(con -> {
@@ -71,7 +71,7 @@ public class AlbumRepositoryImpl implements AlbumRepository {
             ps.setString(1, a.titulo());
             ps.setInt(2, a.anioLanzamiento());
             ps.setString(3, a.tipo());
-            ps.setInt(4, a.idArtista());
+            ps.setInt(4, idArtista);
             return ps;
         }, keyHolder);
         return keyHolder.getKey().intValue();
