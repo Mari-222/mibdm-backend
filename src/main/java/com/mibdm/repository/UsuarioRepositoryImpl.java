@@ -11,6 +11,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import com.mibdm.model.Usuario;
+import com.mibdm.model.UsuarioActualizar;
 import com.mibdm.model.UsuarioCrear;
 
 @Repository
@@ -46,8 +47,8 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
     }
 
     @Override
-    public int crear(UsuarioCrear u) {
-        String sql = "INSERT INTO usuario (nombre, apellido, correo, pais) VALUES (?, ?, ?, ?)";
+    public int crear(UsuarioCrear u, Integer idArtista) {
+        String sql = "INSERT INTO usuario (nombre, apellido, correo, pais, tipo, id_artista) VALUES (?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -55,8 +56,16 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
             ps.setString(2, u.apellido());
             ps.setString(3, u.correo());
             ps.setString(4, u.pais());
+            ps.setString(5, u.tipo());
+            ps.setObject(6, idArtista);
             return ps;
         }, keyHolder);
         return keyHolder.getKey().intValue();
+    }
+
+    @Override
+    public void actualizar(int idUsuario, UsuarioActualizar u) {
+        jdbc.update("UPDATE usuario SET nombre = ?, apellido = ?, correo = ?, pais = ? WHERE id_usuario = ?",
+                u.nombre(), u.apellido(), u.correo(), u.pais(), idUsuario);
     }
 }

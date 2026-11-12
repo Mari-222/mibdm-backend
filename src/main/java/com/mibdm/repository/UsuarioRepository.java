@@ -3,6 +3,7 @@ package com.mibdm.repository;
 import java.util.Optional;
 
 import com.mibdm.model.Usuario;
+import com.mibdm.model.UsuarioActualizar;
 import com.mibdm.model.UsuarioCrear;
 
 public interface UsuarioRepository {
@@ -11,6 +12,12 @@ public interface UsuarioRepository {
 
     Optional<Usuario> buscarPorCorreo(String correo);
 
-    /** Inserta un usuario normal y devuelve el id generado. */
-    int crear(UsuarioCrear usuario);
+    /**
+     * Inserta el usuario y devuelve el id generado. usuario.tipo() ya viene validado ("normal" o
+     * "artista"); idArtista es null para un usuario normal y el perfil de artista para uno artista.
+     */
+    int crear(UsuarioCrear usuario, Integer idArtista);
+
+    /** Actualiza nombre, apellido, correo y pais del usuario. */
+    void actualizar(int idUsuario, UsuarioActualizar datos);
 }
