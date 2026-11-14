@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.mibdm.exception.ApiException;
+import com.mibdm.model.Album;
 import com.mibdm.model.EscuchaCrear;
 import com.mibdm.model.EscuchaVista;
 import com.mibdm.repository.AlbumRepository;
@@ -60,8 +61,10 @@ public class EscuchaService {
             }
             duracion = escuchaRepository.duracionCancion(datos.idCancion());
         } else {
-            if (!albumRepository.existe(datos.idAlbum())) {
-                throw ApiException.notFound("No existe el album " + datos.idAlbum());
+            Album album = albumRepository.buscarPorId(datos.idAlbum())
+                    .orElseThrow(() -> ApiException.notFound("No existe el album " + datos.idAlbum()));
+            if (album.numCanciones() == 0) {
+                throw ApiException.badRequest("Un album sin canciones no se puede escuchar");
             }
             duracion = escuchaRepository.duracionAlbum(datos.idAlbum());
         }
