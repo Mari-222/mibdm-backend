@@ -10,8 +10,9 @@ Grupo 6: Mariana González, Kevin Quiroz y Joselyn Nuñez.
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/auth/login` | Cuerpo `{"correo": "..."}`. Devuelve el usuario o 404. |
-| POST | `/usuarios` | Registra un usuario normal. Cuerpo `{"nombre","apellido","correo","pais"}`. 201, o 409 si el correo ya existe. |
-| GET | `/usuarios/{idUsuario}` | Datos del usuario. |
+| POST | `/usuarios` | Registra una cuenta. Cuerpo `{"nombre","apellido","correo","pais","tipo","artista"}`; `tipo` es `normal` (por defecto) o `artista`. Para `artista` debe venir `artista: {"nombre","paisOrigen","tipo"}` (`tipo` solista o banda) y se crea su perfil de artista junto con la cuenta. 201, 400 si faltan datos, o 409 si el correo o el nombre artístico ya existen. |
+| GET | `/usuarios/{idUsuario}` | Datos del usuario (incluye `idArtista` si es artista). |
+| PUT | `/usuarios/{idUsuario}` | Modifica el perfil. Cuerpo `{"nombre","apellido","correo","pais","artista"}`; `artista` (`nombre`, `paisOrigen`, `tipo`) solo se usa si la cuenta es de artista. El tipo de cuenta no cambia. 409 si el correo o el nombre artístico ya existen. |
 
 ### Catálogo (`artista`, `album`, `cancion`, `genero`, `plataforma`, `cancion_artista`, `cancion_genero`)
 
