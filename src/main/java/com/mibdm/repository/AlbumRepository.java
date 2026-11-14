@@ -16,8 +16,8 @@ public interface AlbumRepository {
 
     boolean existe(int idAlbum);
 
-    /** Inserta el album y devuelve el id generado. */
-    int crear(AlbumCrear album);
+    /** Inserta el album a nombre del artista indicado y devuelve el id generado. */
+    int crear(int idArtista, AlbumCrear album);
 
     Double promedioCalificaciones(int idAlbum);
 

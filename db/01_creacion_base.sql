@@ -9,6 +9,13 @@ CREATE DATABASE MiBDM
 USE MiBDM;
 
 -- Entidades de la BD
+CREATE TABLE artista (
+    id_artista INT AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    pais_origen  VARCHAR(50),
+    tipo ENUM('solista','banda') NOT NULL,
+    CONSTRAINT pk_artista PRIMARY KEY (id_artista)
+);
 CREATE TABLE usuario (
     id_usuario INT AUTO_INCREMENT,
     nombre VARCHAR(50)  NOT NULL,
@@ -17,15 +24,14 @@ CREATE TABLE usuario (
     pais VARCHAR(50),
     fecha_registro  DATE NOT NULL DEFAULT (CURRENT_DATE),
     tipo ENUM('normal','artista') NOT NULL DEFAULT 'normal', -- normal o artista (el artista registra su catalogo)
+    id_artista INT NULL, -- perfil de artista del usuario tipo 'artista' (NULL para usuarios normales)
     CONSTRAINT pk_usuario PRIMARY KEY (id_usuario),
-    CONSTRAINT uq_usuario_correo UNIQUE (correo)
-);
-CREATE TABLE artista (
-    id_artista INT AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    pais_origen  VARCHAR(50),
-    tipo ENUM('solista','banda') NOT NULL,
-    CONSTRAINT pk_artista PRIMARY KEY (id_artista)
+    CONSTRAINT uq_usuario_correo UNIQUE (correo),
+    CONSTRAINT uq_usuario_artista UNIQUE (id_artista),
+    CONSTRAINT fk_usuario_artista FOREIGN KEY (id_artista)
+        REFERENCES artista (id_artista)
+        ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT ck_usuario_artista CHECK ((tipo = 'artista') = (id_artista IS NOT NULL))
 );
 CREATE TABLE album (
     id_album INT AUTO_INCREMENT,

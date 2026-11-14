@@ -3,16 +3,6 @@
 SET NAMES utf8mb4;
 USE MiBDM;
 
--- usuario
-INSERT INTO usuario (id_usuario, nombre, apellido, correo, pais, fecha_registro) VALUES
-(1, 'Mariana','González', 'mari.gonzalez@gmail.com', 'Costa Rica', '2025-11-10'),
-(2, 'Joselyn','Nuñez','juno.numi@gmail.com','Costa Rica', '2025-12-02'),
-(3, 'Kevin','Quiroz','kevin.quiroz@gmail.com', 'Costa Rica','2026-01-15');
-
--- usuario tipo artista
-INSERT INTO usuario (id_usuario, nombre, apellido, correo, pais, fecha_registro, tipo) VALUES
-(4, 'Mateo','Solís','mateo.solis@example.com', 'Costa Rica','2026-02-01', 'artista');
-
 -- artista
 INSERT INTO artista (id_artista, nombre, pais_origen, tipo) VALUES
 (1, 'Soda Stereo','Argentina','banda'),
@@ -21,7 +11,18 @@ INSERT INTO artista (id_artista, nombre, pais_origen, tipo) VALUES
 (4, 'Pharrell Williams','Estados Unidos','solista'),
 (5, 'Bad Bunny','Puerto Rico', 'solista'),
 (6, 'Billie Eilish','Estados Unidos','solista'),
-(7, 'FINNEAS','Estados Unidos','solista');
+(7, 'FINNEAS','Estados Unidos','solista'),
+(8, 'Mateo Solís','Costa Rica','solista');
+
+-- usuario
+INSERT INTO usuario (id_usuario, nombre, apellido, correo, pais, fecha_registro) VALUES
+(1, 'Mariana','González', 'mari.gonzalez@gmail.com', 'Costa Rica', '2025-11-10'),
+(2, 'Joselyn','Nuñez','juno.numi@gmail.com','Costa Rica', '2025-12-02'),
+(3, 'Kevin','Quiroz','kevin.quiroz@gmail.com', 'Costa Rica','2026-01-15');
+
+-- usuario tipo artista (su perfil de artista es el id_artista 8; lo que publique queda a su nombre)
+INSERT INTO usuario (id_usuario, nombre, apellido, correo, pais, fecha_registro, tipo, id_artista) VALUES
+(4, 'Mateo','Solís','mateo.solis@example.com', 'Costa Rica','2026-02-01', 'artista', 8);
 
 -- album
 INSERT INTO album (id_album, titulo, anio_lanzamiento, tipo, id_artista) VALUES

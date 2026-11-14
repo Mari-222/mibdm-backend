@@ -23,10 +23,11 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
             rs.getString("correo"),
             rs.getString("pais"),
             rs.getDate("fecha_registro").toLocalDate(),
-            rs.getString("tipo"));
+            rs.getString("tipo"),
+            rs.getObject("id_artista", Integer.class));
 
     private static final String SELECT =
-            "SELECT id_usuario, nombre, apellido, correo, pais, fecha_registro, tipo FROM usuario ";
+            "SELECT id_usuario, nombre, apellido, correo, pais, fecha_registro, tipo, id_artista FROM usuario ";
 
     private final JdbcTemplate jdbc;
 
