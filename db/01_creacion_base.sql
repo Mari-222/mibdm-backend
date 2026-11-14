@@ -40,6 +40,7 @@ CREATE TABLE album (
     tipo ENUM('LP','EP','sencillo','recopilatorio') NOT NULL DEFAULT 'LP',
     id_artista INT  NOT NULL,  -- relacion total
     CONSTRAINT pk_album PRIMARY KEY (id_album),
+    CONSTRAINT uq_album_artista_titulo UNIQUE (id_artista, titulo),
     CONSTRAINT fk_album_artista FOREIGN KEY (id_artista)
         REFERENCES artista (id_artista)
         ON UPDATE CASCADE ON DELETE RESTRICT,

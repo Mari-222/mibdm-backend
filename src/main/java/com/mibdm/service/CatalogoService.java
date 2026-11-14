@@ -114,8 +114,12 @@ public class CatalogoService {
         if (datos.anioLanzamiento() < 1900 || datos.anioLanzamiento() > 2100) {
             throw ApiException.badRequest("El anio de lanzamiento debe estar entre 1900 y 2100");
         }
+        String titulo = datos.titulo().trim();
+        if (albumRepository.existeTituloDeArtista(autor.idArtista(), titulo, null)) {
+            throw ApiException.conflict("Ya tiene un album con ese titulo");
+        }
         int id = albumRepository.crear(autor.idArtista(), new AlbumCrear(
-                datos.idUsuario(), datos.titulo().trim(), datos.anioLanzamiento(), tipo));
+                datos.idUsuario(), titulo, datos.anioLanzamiento(), tipo));
         return albumRepository.buscarPorId(id).orElseThrow();
     }
 

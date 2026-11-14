@@ -16,6 +16,9 @@ public interface AlbumRepository {
 
     boolean existe(int idAlbum);
 
+    /** True si el artista ya tiene un album con ese titulo (sin distinguir mayusculas), ignorando a excluirId (puede ser null). */
+    boolean existeTituloDeArtista(int idArtista, String titulo, Integer excluirId);
+
     /** Inserta el album a nombre del artista indicado y devuelve el id generado. */
     int crear(int idArtista, AlbumCrear album);
 

@@ -63,6 +63,14 @@ public class AlbumRepositoryImpl implements AlbumRepository {
     }
 
     @Override
+    public boolean existeTituloDeArtista(int idArtista, String titulo, Integer excluirId) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM album WHERE id_artista = ? AND LOWER(titulo) = LOWER(?) AND id_album <> ?",
+                Integer.class, idArtista, titulo, excluirId == null ? -1 : excluirId);
+        return n != null && n > 0;
+    }
+
+    @Override
     public int crear(int idArtista, AlbumCrear a) {
         String sql = "INSERT INTO album (titulo, anio_lanzamiento, tipo, id_artista) VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
