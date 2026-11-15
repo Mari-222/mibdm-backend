@@ -39,6 +39,8 @@ public interface CancionRepository {
 
     void quitarGeneros(int idCancion);
 
+    void quitarOtrosInterpretes(int idCancion, int idAutor);
+
     void agregarArtista(int idCancion, int idArtista, String rol);
 
     void agregarGenero(int idCancion, int idGenero);

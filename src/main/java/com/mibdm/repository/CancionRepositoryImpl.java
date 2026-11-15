@@ -174,6 +174,12 @@ public class CancionRepositoryImpl implements CancionRepository {
     }
 
     @Override
+    public void quitarOtrosInterpretes(int idCancion, int idAutor) {
+        jdbc.update("DELETE FROM cancion_artista WHERE id_cancion = ? AND rol = 'interprete' AND id_artista <> ?",
+                idCancion, idAutor);
+    }
+
+    @Override
     public void agregarArtista(int idCancion, int idArtista, String rol) {
         jdbc.update("INSERT INTO cancion_artista (id_cancion, id_artista, rol) VALUES (?, ?, ?)",
                 idCancion, idArtista, rol);

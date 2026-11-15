@@ -163,16 +163,11 @@ public class CatalogoService {
         albumRepository.eliminar(idAlbum);
     }
 
-    /**
-     * Inserta la cancion, sus participantes y sus generos en una sola transaccion.
-     */
-    @Transactional
-    public CancionDetalle crearCancion(CancionCrear datos) {
+    /** Valida campos y relaciones comunes de la canción. */
+    private void validarCancion(CancionCrear datos, int idAutor) {
         if (datos == null || datos.titulo() == null || datos.titulo().isBlank()) {
             throw ApiException.badRequest("El titulo es obligatorio");
         }
-        Usuario autor = exigirArtista(datos.idUsuario());
-        int idAutor = autor.idArtista();
         if (datos.duracionSeg() <= 0) {
             throw ApiException.badRequest("La duracion debe ser mayor que 0");
         }
@@ -189,7 +184,28 @@ public class CatalogoService {
                 throw ApiException.forbidden("Solo puede agregar canciones a sus propios albumes");
             }
         }
-        // otros interpretes (opcional); el autor no se repite aunque venga en la lista
+        // Validar géneros existentes
+        List<Integer> generos = datos.idsGeneros() == null ? List.of() : datos.idsGeneros();
+        for (int idGenero : generos) {
+            if (!generoRepository.existe(idGenero)) {
+                throw ApiException.notFound("No existe el genero " + idGenero);
+            }
+        }
+    }
+
+    /**
+     * Inserta la cancion, sus participantes y sus generos en una sola transaccion.
+     */
+    @Transactional
+    public CancionDetalle crearCancion(CancionCrear datos) {
+        if (datos == null || datos.titulo() == null || datos.titulo().isBlank()) {
+            throw ApiException.badRequest("El titulo es obligatorio");
+        }
+        Usuario autor = exigirArtista(datos.idUsuario());
+        int idAutor = autor.idArtista();
+
+        validarCancion(datos, idAutor);
+
         Set<Integer> otrosInterpretes = new LinkedHashSet<>();
         if (datos.idsInterpretes() != null) {
             otrosInterpretes.addAll(datos.idsInterpretes());
@@ -200,12 +216,6 @@ public class CatalogoService {
                 throw ApiException.notFound("No existe el artista " + idArtista);
             }
         }
-        List<Integer> generos = datos.idsGeneros() == null ? List.of() : datos.idsGeneros();
-        for (int idGenero : generos) {
-            if (!generoRepository.existe(idGenero)) {
-                throw ApiException.notFound("No existe el genero " + idGenero);
-            }
-        }
 
         int idCancion = cancionRepository.crear(
                 datos.titulo().trim(), datos.duracionSeg(), datos.numeroPista(), datos.idAlbum());
@@ -214,6 +224,7 @@ public class CatalogoService {
         for (int idArtista : otrosInterpretes) {
             cancionRepository.agregarArtista(idCancion, idArtista, "interprete");
         }
+        List<Integer> generos = datos.idsGeneros() == null ? List.of() : datos.idsGeneros();
         for (int idGenero : generos) {
             cancionRepository.agregarGenero(idCancion, idGenero);
         }
@@ -235,33 +246,32 @@ public class CatalogoService {
             throw ApiException.forbidden("Solo puede modificar sus propias canciones");
         }
 
-        if (datos.duracionSeg() <= 0) {
-            throw ApiException.badRequest("La duracion debe ser mayor que 0");
+        // 1) Validar datos comunes de la canción
+        validarCancion(datos, idAutor);
+
+        Set<Integer> otrosInterpretes = new LinkedHashSet<>();
+        if (datos.idsInterpretes() != null) {
+            otrosInterpretes.addAll(datos.idsInterpretes());
         }
-        if (datos.numeroPista() != null && datos.numeroPista() <= 0) {
-            throw ApiException.badRequest("El numero de pista debe ser mayor que 0");
-        }
-        if (datos.numeroPista() != null && datos.idAlbum() == null) {
-            throw ApiException.badRequest("Una cancion sin album no puede tener numero de pista");
-        }
-        if (datos.idAlbum() != null) {
-            Album album = albumRepository.buscarPorId(datos.idAlbum())
-                    .orElseThrow(() -> ApiException.notFound("No existe el album " + datos.idAlbum()));
-            if (album.idArtista() != idAutor) {
-                throw ApiException.forbidden("Solo puede asociar la cancion a sus propios albumes");
+        otrosInterpretes.remove(idAutor);
+        for (int idArtista : otrosInterpretes) {
+            if (!artistaRepository.existe(idArtista)) {
+                throw ApiException.notFound("No existe el artista " + idArtista);
             }
         }
 
-        List<Integer> generos = datos.idsGeneros() == null ? List.of() : datos.idsGeneros();
-        for (int idGenero : generos) {
-            if (!generoRepository.existe(idGenero)) {
-                throw ApiException.notFound("No existe el genero " + idGenero);
-            }
-        }
-
+        // 2) Actualizar datos principales
         cancionRepository.actualizar(idCancion, datos.titulo().trim(), datos.duracionSeg(), datos.numeroPista(), datos.idAlbum());
 
+        // 3) Limpiar géneros e intérpretes adicionales anteriores
         cancionRepository.quitarGeneros(idCancion);
+        cancionRepository.quitarOtrosInterpretes(idCancion, idAutor);
+
+        // 4) Volver a agregar intérpretes y géneros actualizados
+        for (int idArtista : otrosInterpretes) {
+            cancionRepository.agregarArtista(idCancion, idArtista, "interprete");
+        }
+        List<Integer> generos = datos.idsGeneros() == null ? List.of() : datos.idsGeneros();
         for (int idGenero : generos) {
             cancionRepository.agregarGenero(idCancion, idGenero);
         }
