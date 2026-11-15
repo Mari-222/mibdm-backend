@@ -27,14 +27,18 @@ Grupo 6: Mariana González, Kevin Quiroz y Joselyn Nuñez.
 | GET | `/generos` | Lista de géneros. |
 | GET | `/plataformas` | Lista de plataformas. |
 | POST | `/albumes` | **Solo usuarios tipo `artista`** (403 si no). Cuerpo `{"idUsuario","titulo","anioLanzamiento","tipo"}`; `tipo` es `LP`, `EP`, `sencillo` o `recopilatorio` (por defecto `LP`). El álbum queda siempre a nombre del perfil de artista del usuario (`usuario.idArtista`). |
+| PUT | `/albumes/{idAlbum}` | **Solo el artista dueño** (403 si no, 404 si no existe). Cuerpo `{"idUsuario","titulo","anioLanzamiento","tipo"}`. 409 si el artista ya tiene otro álbum con ese título. |
+| DELETE | `/albumes/{idAlbum}` | **Solo el artista dueño** (403 si no, 404 si no existe). Parámetro `?idUsuario=`. 409 si tiene canciones o escuchas asociadas. 204. |
 | POST | `/canciones` | **Solo usuarios tipo `artista`**. Cuerpo `{"idUsuario","titulo","duracionSeg","numeroPista","idAlbum","idsInterpretes":[..],"idsGeneros":[..]}`. `numeroPista` e `idAlbum` son opcionales (sencillo); si hay `idAlbum`, debe ser un álbum del propio artista (403 si no). El artista del usuario queda como autor (roles `compositor` e `interprete`); `idsInterpretes` solo agrega a **otros** artistas como intérpretes y puede ir vacío. Se inserta en `cancion`, `cancion_artista` y `cancion_genero` en una transacción. 409 si la pista ya existe en el álbum. |
+| PUT | `/canciones/{idCancion}` | **Solo el artista autor** (403 si no, 404 si no existe). Cuerpo `{"idUsuario","titulo","duracionSeg","numeroPista","idAlbum","idsGeneros":[..]}`. Actualiza datos y géneros. 409 si la pista ya existe en el álbum. |
+| DELETE | `/canciones/{idCancion}` | **Solo el artista autor** (403 si no, 404 si no existe). Parámetro `?idUsuario=`. 409 si ya tiene escuchas registradas. 204. |
 
 ### Escuchas (`escucha`)
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/usuarios/{idUsuario}/escuchas?limite=50` | Historial, de la más reciente a la más antigua. `tipoItem` es `cancion` o `album`. |
-| POST | `/usuarios/{idUsuario}/escuchas` | Registra una escucha. Cuerpo `{"idCancion" **o** "idAlbum", "idPlataforma", "segundosEscuchados", "fechaHora"}`. Se debe enviar `idCancion` o `idAlbum`, nunca ambos. Si faltan `segundosEscuchados` se usa la duración completa y si falta `fechaHora` la fecha actual (`2026-04-18T19:00:00`). |
+| POST | `/usuarios/{idUsuario}/escuchas` | Registra una escucha. Cuerpo `{"idCancion` **o** `"idAlbum", "idPlataforma", "segundosEscuchados", "fechaHora"}`. Se debe enviar `idCancion` o `idAlbum`, nunca ambos. Si faltan `segundosEscuchados` se usa la duración completa y si falta `fechaHora` la fecha actual (`2026-04-18T19:00:00`). |
 | DELETE | `/usuarios/{idUsuario}/escuchas/{idEscucha}` | Elimina una escucha del usuario (204). |
 
 ### Calificaciones (`calificacion`, `calificacion_album`)
@@ -70,8 +74,8 @@ Grupo 6: Mariana González, Kevin Quiroz y Joselyn Nuñez.
 |---|---|
 | `usuario` | leer, insertar (registro) |
 | `artista` | leer |
-| `album` | leer, insertar (usuario artista) |
-| `cancion` | leer, insertar (usuario artista) |
+| `album` | leer, insertar, modificar, eliminar (usuario artista) |
+| `cancion` | leer, insertar, modificar, eliminar (usuario artista) |
 | `genero` | leer |
 | `plataforma` | leer |
 | `cancion_artista` | leer, insertar (usuario artista) |
