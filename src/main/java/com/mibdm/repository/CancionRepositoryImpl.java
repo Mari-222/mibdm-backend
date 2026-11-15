@@ -58,7 +58,7 @@ public class CancionRepositoryImpl implements CancionRepository {
         args.add("%" + (q == null ? "" : q.trim()) + "%");
         if (idGenero != null) {
             sql.append("AND EXISTS (SELECT 1 FROM cancion_genero cg ")
-               .append("WHERE cg.id_cancion = c.id_cancion AND cg.id_genero = ?) ");
+                    .append("WHERE cg.id_cancion = c.id_cancion AND cg.id_genero = ?) ");
             args.add(idGenero);
         }
         sql.append("ORDER BY c.titulo");
@@ -141,6 +141,36 @@ public class CancionRepositoryImpl implements CancionRepository {
             return ps;
         }, keyHolder);
         return keyHolder.getKey().intValue();
+    }
+
+    @Override
+    public void actualizar(int idCancion, String titulo, int duracionSeg, Integer numeroPista, Integer idAlbum) {
+        jdbc.update("UPDATE cancion SET titulo = ?, duracion_seg = ?, numero_pista = ?, id_album = ? WHERE id_cancion = ?",
+                titulo, duracionSeg, numeroPista, idAlbum, idCancion);
+    }
+
+    @Override
+    public void eliminar(int idCancion) {
+        jdbc.update("DELETE FROM cancion WHERE id_cancion = ?", idCancion);
+    }
+
+    @Override
+    public int contarEscuchas(int idCancion) {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM escucha WHERE id_cancion = ?", Integer.class, idCancion);
+        return n == null ? 0 : n;
+    }
+
+    @Override
+    public boolean esAutor(int idCancion, int idArtista) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM cancion_artista WHERE id_cancion = ? AND id_artista = ? AND rol = 'compositor'",
+                Integer.class, idCancion, idArtista);
+        return n != null && n > 0;
+    }
+
+    @Override
+    public void quitarGeneros(int idCancion) {
+        jdbc.update("DELETE FROM cancion_genero WHERE id_cancion = ?", idCancion);
     }
 
     @Override

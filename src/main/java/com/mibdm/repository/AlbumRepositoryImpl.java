@@ -86,6 +86,23 @@ public class AlbumRepositoryImpl implements AlbumRepository {
     }
 
     @Override
+    public void actualizar(int idAlbum, AlbumCrear a) {
+        jdbc.update("UPDATE album SET titulo = ?, anio_lanzamiento = ?, tipo = ? WHERE id_album = ?",
+                a.titulo(), a.anioLanzamiento(), a.tipo(), idAlbum);
+    }
+
+    @Override
+    public void eliminar(int idAlbum) {
+        jdbc.update("DELETE FROM album WHERE id_album = ?", idAlbum);
+    }
+
+    @Override
+    public int contarEscuchas(int idAlbum) {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM escucha WHERE id_album = ?", Integer.class, idAlbum);
+        return n == null ? 0 : n;
+    }
+
+    @Override
     public Double promedioCalificaciones(int idAlbum) {
         return jdbc.queryForObject(
                 "SELECT AVG(puntuacion) FROM calificacion_album WHERE id_album = ?", Double.class, idAlbum);

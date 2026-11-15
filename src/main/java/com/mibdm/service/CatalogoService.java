@@ -1,5 +1,7 @@
 package com.mibdm.service;
 
+import com.mibdm.repository.AlbumRepository;
+
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,7 +21,6 @@ import com.mibdm.model.CancionDetalle;
 import com.mibdm.model.Genero;
 import com.mibdm.model.Plataforma;
 import com.mibdm.model.Usuario;
-import com.mibdm.repository.AlbumRepository;
 import com.mibdm.repository.ArtistaRepository;
 import com.mibdm.repository.CancionRepository;
 import com.mibdm.repository.GeneroRepository;
@@ -99,14 +100,13 @@ public class CatalogoService {
         return plataformaRepository.listar();
     }
 
-    // ---------- alta de catalogo (solo usuarios tipo 'artista') ----------
+    // ---------- alta, actualizacion y eliminacion de catalogo (solo usuarios tipo 'artista') ----------
 
-    /** El album queda siempre a nombre del perfil de artista del usuario que lo publica. */
-    public Album crearAlbum(AlbumCrear datos) {
+    /** Valida campos comunes del album (titulo, tipo, anio). */
+    private String validarAlbum(AlbumCrear datos) {
         if (datos == null || datos.titulo() == null || datos.titulo().isBlank()) {
             throw ApiException.badRequest("El titulo es obligatorio");
         }
-        Usuario autor = exigirArtista(datos.idUsuario());
         String tipo = datos.tipo() == null || datos.tipo().isBlank() ? "LP" : datos.tipo();
         if (!TIPOS_ALBUM.contains(tipo)) {
             throw ApiException.badRequest("Tipo de album invalido. Use: LP, EP, sencillo o recopilatorio");
@@ -114,6 +114,13 @@ public class CatalogoService {
         if (datos.anioLanzamiento() < 1900 || datos.anioLanzamiento() > 2100) {
             throw ApiException.badRequest("El anio de lanzamiento debe estar entre 1900 y 2100");
         }
+        return tipo;
+    }
+
+    /** El album queda siempre a nombre del perfil de artista del usuario que lo publica. */
+    public Album crearAlbum(AlbumCrear datos) {
+        String tipo = validarAlbum(datos);
+        Usuario autor = exigirArtista(datos.idUsuario());
         String titulo = datos.titulo().trim();
         if (albumRepository.existeTituloDeArtista(autor.idArtista(), titulo, null)) {
             throw ApiException.conflict("Ya tiene un album con ese titulo");
@@ -123,10 +130,41 @@ public class CatalogoService {
         return albumRepository.buscarPorId(id).orElseThrow();
     }
 
+    public Album actualizarAlbum(int idAlbum, AlbumCrear datos) {
+        String tipo = validarAlbum(datos);
+        Usuario autor = exigirArtista(datos.idUsuario());
+        Album album = albumRepository.buscarPorId(idAlbum)
+                .orElseThrow(() -> ApiException.notFound("No existe el album " + idAlbum));
+        if (album.idArtista() != autor.idArtista()) {
+            throw ApiException.forbidden("Solo puede modificar sus propios albumes");
+        }
+        String titulo = datos.titulo().trim();
+        if (albumRepository.existeTituloDeArtista(autor.idArtista(), titulo, idAlbum)) {
+            throw ApiException.conflict("Ya tiene un album con ese titulo");
+        }
+        albumRepository.actualizar(idAlbum, new AlbumCrear(
+                datos.idUsuario(), titulo, datos.anioLanzamiento(), tipo));
+        return albumRepository.buscarPorId(idAlbum).orElseThrow();
+    }
+
+    public void eliminarAlbum(int idAlbum, int idUsuario) {
+        Usuario autor = exigirArtista(idUsuario);
+        Album album = albumRepository.buscarPorId(idAlbum)
+                .orElseThrow(() -> ApiException.notFound("No existe el album " + idAlbum));
+        if (album.idArtista() != autor.idArtista()) {
+            throw ApiException.forbidden("Solo puede eliminar sus propios albumes");
+        }
+        if (album.numCanciones() > 0) {
+            throw ApiException.conflict("Elimine primero las canciones del album");
+        }
+        if (albumRepository.contarEscuchas(idAlbum) > 0) {
+            throw ApiException.conflict("El album ya tiene escuchas registradas y no se puede eliminar");
+        }
+        albumRepository.eliminar(idAlbum);
+    }
+
     /**
      * Inserta la cancion, sus participantes y sus generos en una sola transaccion.
-     * El artista del usuario es siempre el autor (compositor e interprete); idsInterpretes
-     * solo agrega a otros artistas como interpretes.
      */
     @Transactional
     public CancionDetalle crearCancion(CancionCrear datos) {
@@ -180,6 +218,73 @@ public class CatalogoService {
             cancionRepository.agregarGenero(idCancion, idGenero);
         }
         return detalleCancion(idCancion);
+    }
+
+    @Transactional
+    public CancionDetalle actualizarCancion(int idCancion, CancionCrear datos) {
+        if (datos == null || datos.titulo() == null || datos.titulo().isBlank()) {
+            throw ApiException.badRequest("El titulo es obligatorio");
+        }
+        Usuario autor = exigirArtista(datos.idUsuario());
+        int idAutor = autor.idArtista();
+
+        if (!cancionRepository.existe(idCancion)) {
+            throw ApiException.notFound("No existe la cancion " + idCancion);
+        }
+        if (!cancionRepository.esAutor(idCancion, idAutor)) {
+            throw ApiException.forbidden("Solo puede modificar sus propias canciones");
+        }
+
+        if (datos.duracionSeg() <= 0) {
+            throw ApiException.badRequest("La duracion debe ser mayor que 0");
+        }
+        if (datos.numeroPista() != null && datos.numeroPista() <= 0) {
+            throw ApiException.badRequest("El numero de pista debe ser mayor que 0");
+        }
+        if (datos.numeroPista() != null && datos.idAlbum() == null) {
+            throw ApiException.badRequest("Una cancion sin album no puede tener numero de pista");
+        }
+        if (datos.idAlbum() != null) {
+            Album album = albumRepository.buscarPorId(datos.idAlbum())
+                    .orElseThrow(() -> ApiException.notFound("No existe el album " + datos.idAlbum()));
+            if (album.idArtista() != idAutor) {
+                throw ApiException.forbidden("Solo puede asociar la cancion a sus propios albumes");
+            }
+        }
+
+        List<Integer> generos = datos.idsGeneros() == null ? List.of() : datos.idsGeneros();
+        for (int idGenero : generos) {
+            if (!generoRepository.existe(idGenero)) {
+                throw ApiException.notFound("No existe el genero " + idGenero);
+            }
+        }
+
+        cancionRepository.actualizar(idCancion, datos.titulo().trim(), datos.duracionSeg(), datos.numeroPista(), datos.idAlbum());
+
+        cancionRepository.quitarGeneros(idCancion);
+        for (int idGenero : generos) {
+            cancionRepository.agregarGenero(idCancion, idGenero);
+        }
+
+        return detalleCancion(idCancion);
+    }
+
+    @Transactional
+    public void eliminarCancion(int idCancion, int idUsuario) {
+        Usuario autor = exigirArtista(idUsuario);
+
+        if (!cancionRepository.existe(idCancion)) {
+            throw ApiException.notFound("No existe la cancion " + idCancion);
+        }
+        if (!cancionRepository.esAutor(idCancion, autor.idArtista())) {
+            throw ApiException.forbidden("Solo puede eliminar sus propias canciones");
+        }
+
+        if (cancionRepository.contarEscuchas(idCancion) > 0) {
+            throw ApiException.conflict("La cancion ya tiene escuchas registradas y no se puede eliminar");
+        }
+
+        cancionRepository.eliminar(idCancion);
     }
 
     /** Devuelve el usuario si es de tipo artista y tiene su perfil de artista; si no, lanza 403. */

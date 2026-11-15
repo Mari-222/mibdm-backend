@@ -3,9 +3,11 @@ package com.mibdm.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,6 +48,11 @@ public class CatalogoController {
 
     @GetMapping("/albumes")
     public List<Album> albumes(@RequestParam(required = false) String q) {
+        return albumServiceList(q);
+    }
+
+    // Método auxiliar interno para simplificar si usas listarAlbumes
+    private List<Album> albumServiceList(String q) {
         return catalogoService.listarAlbumes(q);
     }
 
@@ -58,6 +65,17 @@ public class CatalogoController {
     @ResponseStatus(HttpStatus.CREATED)
     public Album crearAlbum(@RequestBody AlbumCrear datos) {
         return catalogoService.crearAlbum(datos);
+    }
+
+    @PutMapping("/albumes/{idAlbum}")
+    public Album actualizarAlbum(@PathVariable int idAlbum, @RequestBody AlbumCrear datos) {
+        return catalogoService.actualizarAlbum(idAlbum, datos);
+    }
+
+    @DeleteMapping("/albumes/{idAlbum}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarAlbum(@PathVariable int idAlbum, @RequestParam int idUsuario) {
+        catalogoService.eliminarAlbum(idAlbum, idUsuario);
     }
 
     @GetMapping("/canciones")
@@ -75,6 +93,17 @@ public class CatalogoController {
     @ResponseStatus(HttpStatus.CREATED)
     public CancionDetalle crearCancion(@RequestBody CancionCrear datos) {
         return catalogoService.crearCancion(datos);
+    }
+
+    @PutMapping("/canciones/{idCancion}")
+    public CancionDetalle actualizarCancion(@PathVariable int idCancion, @RequestBody CancionCrear datos) {
+        return catalogoService.actualizarCancion(idCancion, datos);
+    }
+
+    @DeleteMapping("/canciones/{idCancion}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarCancion(@PathVariable int idCancion, @RequestParam int idUsuario) {
+        catalogoService.eliminarCancion(idCancion, idUsuario);
     }
 
     @GetMapping("/generos")

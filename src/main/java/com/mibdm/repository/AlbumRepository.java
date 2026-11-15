@@ -22,6 +22,12 @@ public interface AlbumRepository {
     /** Inserta el album a nombre del artista indicado y devuelve el id generado. */
     int crear(int idArtista, AlbumCrear album);
 
+    void actualizar(int idAlbum, AlbumCrear datos);
+
+    void eliminar(int idAlbum);
+
+    int contarEscuchas(int idAlbum);
+
     Double promedioCalificaciones(int idAlbum);
 
     int totalCalificaciones(int idAlbum);

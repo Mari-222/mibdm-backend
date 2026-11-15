@@ -29,6 +29,16 @@ public interface CancionRepository {
     /** Inserta la cancion y devuelve el id generado. */
     int crear(String titulo, int duracionSeg, Integer numeroPista, Integer idAlbum);
 
+    void actualizar(int idCancion, String titulo, int duracionSeg, Integer numeroPista, Integer idAlbum);
+
+    void eliminar(int idCancion);
+
+    int contarEscuchas(int idCancion);
+
+    boolean esAutor(int idCancion, int idArtista);
+
+    void quitarGeneros(int idCancion);
+
     void agregarArtista(int idCancion, int idArtista, String rol);
 
     void agregarGenero(int idCancion, int idGenero);
