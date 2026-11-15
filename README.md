@@ -78,8 +78,8 @@ Grupo 6: Mariana González, Kevin Quiroz y Joselyn Nuñez.
 | `cancion` | leer, insertar, modificar, eliminar (usuario artista) |
 | `genero` | leer |
 | `plataforma` | leer |
-| `cancion_artista` | leer, insertar (usuario artista) |
-| `cancion_genero` | leer, insertar (usuario artista) |
+| `cancion_artista` | leer, insertar, modificar, eliminar (usuario artista) |
+| `cancion_genero` | leer, insertar, modificar, eliminar (usuario artista) |
 | `escucha` | leer, insertar, borrar |
 | `calificacion` | leer, insertar/actualizar, borrar |
 | `calificacion_album` | leer, insertar/actualizar, borrar |
